@@ -14,6 +14,16 @@ yarn dev               # http://localhost:5173
 
 To use it on a tablet on the same Wi-Fi: `yarn dev --host`, then open the "Network" URL. Note that each device/browser has its own separate data — use **Settings → Backup** to move it.
 
+## Live site
+
+**https://bpneal.github.io/spellings/**
+
+Every push to `main` runs `.github/workflows/deploy.yml`, which typechecks, lints, checks formatting, runs the tests, builds and deploys to GitHub Pages. If any check fails, nothing is deployed. Watch progress in the repo's **Actions** tab.
+
+Data is saved in each visitor's own browser, so the live site starts empty. To move data from `localhost`, use **Settings → Backup** to download it there and restore it on the live site.
+
+Production builds use the base path `/spellings/`. To host somewhere else, build with `BASE_PATH=/ yarn build`.
+
 ## Scripts
 
 | Command        | What it does                              |
