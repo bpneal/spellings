@@ -3,15 +3,18 @@ import { BackButton, TopBar } from '../../components/common';
 import { useAppData } from '../../state/useAppData';
 import { BackupSettings } from './BackupSettings';
 import { ChildrenSettings } from './ChildrenSettings';
+import { PasscodeGate } from './PasscodeGate';
+import { PasscodeSettings } from './PasscodeSettings';
 import { ProgressReport } from './ProgressReport';
 import { SpeechSettings } from './SpeechSettings';
 
-type Tab = 'children' | 'progress' | 'speech' | 'backup';
+type Tab = 'children' | 'progress' | 'speech' | 'passcode' | 'backup';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'children', label: '👧👦 Children & spellings' },
   { id: 'progress', label: '📊 Progress' },
   { id: 'speech', label: '🔊 Voice & sound' },
+  { id: 'passcode', label: '🔒 Passcode' },
   { id: 'backup', label: '💾 Backup' },
 ];
 
@@ -22,8 +25,21 @@ export function Settings({
   onBack: () => void;
   initialChildId?: string;
 }) {
-  const { saveOk } = useAppData();
+  const { data, saveOk } = useAppData();
   const [tab, setTab] = useState<Tab>('children');
+  // Settings is mounted fresh on each visit, so it locks again whenever you leave.
+  // Setting a passcode while inside doesn't lock you out of the current visit.
+  const [unlocked, setUnlocked] = useState(() => !data.settings.passcode);
+
+  if (!unlocked && data.settings.passcode) {
+    return (
+      <PasscodeGate
+        passcode={data.settings.passcode}
+        onUnlock={() => setUnlocked(true)}
+        onCancel={onBack}
+      />
+    );
+  }
 
   return (
     <div className="screen screen--settings">
@@ -53,6 +69,7 @@ export function Settings({
           {tab === 'children' && <ChildrenSettings initialChildId={initialChildId} />}
           {tab === 'progress' && <ProgressReport initialChildId={initialChildId} />}
           {tab === 'speech' && <SpeechSettings />}
+          {tab === 'passcode' && <PasscodeSettings />}
           {tab === 'backup' && <BackupSettings />}
         </section>
       </main>

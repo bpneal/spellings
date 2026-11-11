@@ -1554,6 +1554,68 @@ input[type='range'] {
   color: #166534;
 }
 
+/* Passcode */
+.gate {
+  display: flex;
+  justify-content: center;
+  padding-top: 24px;
+}
+
+.gate__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: min(100%, 420px);
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.gate__panel h2 {
+  font-family: var(--font-ui);
+  font-size: 24px;
+}
+
+.gate__icon {
+  font-size: 48px;
+}
+
+.passcode-input {
+  width: 200px;
+  font-size: 36px;
+  text-align: center;
+  letter-spacing: 0.5em;
+  padding-left: calc(14px + 0.5em);
+}
+
+.passcode-input--small {
+  width: 160px;
+  font-size: 24px;
+}
+
+.gate__message {
+  min-height: 1.4em;
+  margin: 0;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.gate__help {
+  font-size: 14px;
+  color: var(--muted);
+  text-align: left;
+}
+
+.gate__help summary {
+  cursor: pointer;
+  text-align: center;
+}
+
+.gate__help p {
+  margin: 8px 0 0;
+  line-height: 1.5;
+}
+
 /* Report */
 .report {
   display: flex;

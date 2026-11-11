@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { STORAGE_KEY, emptyData, loadData, parseAppData, saveData } from './storage';
 
+const withCode = (passcode: unknown) =>
+  parseAppData({ version: 1, children: [], settings: { passcode } }).settings.passcode;
+
 describe('parseAppData', () => {
   it('rejects things that are not a backup', () => {
     expect(() => parseAppData(null)).toThrow('does not look like a Spelling Stars backup');
@@ -24,6 +27,13 @@ describe('parseAppData', () => {
     });
     expect(data.settings.rate).toBe(1.5);
     expect(data.settings.soundEffects).toBe(true);
+  });
+
+  it('keeps a valid 4-digit passcode and drops anything else', () => {
+    expect(withCode('0123')).toBe('0123');
+    expect(withCode('123')).toBeUndefined();
+    expect(withCode('12a4')).toBeUndefined();
+    expect(withCode(1234)).toBeUndefined();
   });
 
   it('drops progress for children that do not exist', () => {

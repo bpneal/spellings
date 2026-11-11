@@ -47,6 +47,8 @@ export interface Settings {
   /** Speech rate, 0.5–1.5. */
   rate: number;
   soundEffects: boolean;
+  /** Optional 4-digit passcode that locks the Settings area; undefined means no lock. */
+  passcode?: string;
 }
 
 export interface AppData {

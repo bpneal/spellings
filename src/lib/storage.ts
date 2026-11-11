@@ -6,6 +6,10 @@ export const STORAGE_KEY = 'spelling-stars:v1';
 
 export const DEFAULT_SETTINGS: Settings = { rate: 0.85, soundEffects: true };
 
+export function isValidPasscode(value: unknown): value is string {
+  return typeof value === 'string' && /^\d{4}$/.test(value);
+}
+
 export function emptyData(): AppData {
   return { version: 1, children: [], progress: {}, settings: { ...DEFAULT_SETTINGS } };
 }
@@ -65,6 +69,7 @@ export function parseAppData(value: unknown): AppData {
     voiceURI: typeof s.voiceURI === 'string' && s.voiceURI ? s.voiceURI : undefined,
     rate: Math.min(1.5, Math.max(0.5, num(s.rate, DEFAULT_SETTINGS.rate))),
     soundEffects: typeof s.soundEffects === 'boolean' ? s.soundEffects : true,
+    passcode: isValidPasscode(s.passcode) ? s.passcode : undefined,
   };
   return { version: 1, children, progress, settings };
 }

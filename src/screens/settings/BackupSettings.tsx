@@ -55,8 +55,8 @@ export function BackupSettings() {
 
       <h2>Restore</h2>
       <p>
-        Restoring a backup <strong>replaces</strong> all children, spellings and progress on this
-        device.
+        Restoring a backup <strong>replaces</strong> all children, spellings, progress and settings
+        on this device, including the passcode (or lack of one) saved in the backup.
       </p>
       <label className="btn btn--secondary file-btn">
         ⬆ Choose backup file…
