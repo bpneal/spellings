@@ -1,0 +1,14 @@
+node_modules
+dist
+*.local
+.DS_Store
+coverage
+
+# Yarn 4
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
