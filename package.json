@@ -14,7 +14,8 @@
     "format:check": "oxfmt --check",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "yarn typecheck && yarn lint && yarn format:check && yarn test"
+    "check": "yarn typecheck && yarn lint && yarn format:check && yarn test",
+    "postinstall": "husky"
   },
   "dependencies": {
     "@fontsource-variable/fredoka": "^5.3.0",
@@ -33,6 +34,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.3.0",
+    "husky": "^9.1.7",
     "jsdom": "^31.0.0",
     "oxfmt": "^0.78.0",
     "oxlint": "^1.93.0",

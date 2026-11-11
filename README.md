@@ -26,6 +26,15 @@ To use it on a tablet on the same Wi-Fi: `yarn dev --host`, then open the "Netwo
 | `yarn format`  | Format with OXFmt (`yarn format:check`)   |
 | `yarn check`   | Typecheck, lint, format check and tests   |
 
+## Git hooks
+
+[Husky](https://typicode.github.io/husky/) installs these automatically on `yarn install` (via the `postinstall` script):
+
+- **pre-commit** – `yarn lint` and `yarn format:check` (run `yarn format` / `yarn lint:fix` to fix)
+- **pre-push** – `yarn test`
+
+Skip them in an emergency with `--no-verify`.
+
 ## How it works
 
 **Grown-ups (⚙️ Grown-ups / Settings)**
