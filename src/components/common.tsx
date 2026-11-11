@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { THEMES } from '../lib/themes';
 import type { Theme } from '../lib/types';
 import { useSpeech, useSpeechStatus } from '../hooks/useSpeech';
+import { reloadForSpeech, triedReloadForSpeech } from '../lib/speech';
 
 export function Mascot({
   theme,
@@ -147,14 +148,23 @@ export function ThemeSwitch({ theme, onChange }: { theme: Theme; onChange: (t: T
 }
 
 /**
- * Shown when the browser's speech engine has stopped responding. A page reload is the only
- * reliable way to revive it (saved data is kept; a round in progress restarts).
+ * Shown when the browser's speech engine has stopped responding. A page reload often revives
+ * it (saved data is kept; a round in progress restarts). If a reload has already been tried,
+ * Chrome or the computer's speech service needs restarting, which a grown-up has to do.
  */
 export function SpeechStuckBanner() {
   const { health } = useSpeechStatus();
   if (health !== 'stuck') return null;
+  if (triedReloadForSpeech()) {
+    return (
+      <div className="speech-stuck" role="status">
+        <span aria-hidden="true">🔇</span> The talking still isn't working. Please ask a grown-up to
+        help.
+      </div>
+    );
+  }
   return (
-    <button type="button" className="speech-stuck" onClick={() => window.location.reload()}>
+    <button type="button" className="speech-stuck" onClick={reloadForSpeech}>
       <span aria-hidden="true">🔇</span> The talking has stopped. Tap here to fix it!
     </button>
   );

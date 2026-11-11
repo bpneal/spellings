@@ -5,6 +5,7 @@ import {
   getSpeechHealth,
   getSpeechLog,
   resetSpeech,
+  triedReloadForSpeech,
   speak,
   spellOut,
   stopSpeaking,
@@ -84,6 +85,7 @@ beforeEach(() => {
 
 afterEach(() => {
   resetSpeech();
+  sessionStorage.clear();
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
@@ -140,6 +142,62 @@ describe('speak', () => {
     stopSpeaking();
     vi.advanceTimersByTime(START_TIMEOUT_MS * 2);
     expect(texts()).toEqual(['cat']);
+  });
+});
+
+describe('duplicate requests', () => {
+  it('ignores the same words requested again while they are still starting', () => {
+    install('stuck');
+    speak('busy', { rate: 0.85 });
+    speak('busy', { rate: 0.85 });
+    vi.advanceTimersByTime(GAP);
+    expect(texts()).toEqual(['busy']);
+    expect(synth.cancel).not.toHaveBeenCalled();
+    expect(getSpeechLog().some((e) => e.event === 'duplicate')).toBe(true);
+  });
+
+  it('speaks the same words again once they have finished', () => {
+    install();
+    speak('busy');
+    synth.speaking = false;
+    synth.spoken[0]?.fire('end');
+    speak('busy');
+    expect(texts()).toEqual(['busy', 'busy']);
+  });
+
+  it('speaks the same words again after the duplicate window', () => {
+    install();
+    speak('busy');
+    vi.advanceTimersByTime(1500);
+    speak('busy');
+    vi.advanceTimersByTime(GAP);
+    expect(texts()).toEqual(['busy', 'busy']);
+  });
+
+  it('does not treat different words, voices or speeds as duplicates', () => {
+    install();
+    speak('busy', { rate: 0.85 });
+    speak('busy', { rate: 1 });
+    vi.advanceTimersByTime(GAP);
+    expect(texts()).toEqual(['busy', 'busy']);
+  });
+
+  it('logs how many English voices the browser reports', () => {
+    install();
+    speak('cat');
+    expect(getSpeechLog().find((e) => e.event === 'speak')?.detail).toContain('1 English voices');
+  });
+});
+
+describe('reload tracking', () => {
+  it('remembers a reload until speech works again', () => {
+    install('stuck');
+    sessionStorage.setItem('spelling-stars:speech-reloaded', '1');
+    expect(triedReloadForSpeech()).toBe(true);
+
+    synth.behaviour = 'start';
+    speak('cat');
+    expect(triedReloadForSpeech()).toBe(false);
   });
 });
 

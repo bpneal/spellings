@@ -1,6 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { useSpeech, useSpeechStatus, useVoices } from '../../hooks/useSpeech';
-import { resetSpeech, speak, spellOut, type SpeechLogEntry } from '../../lib/speech';
+import {
+  reloadForSpeech,
+  resetSpeech,
+  speak,
+  spellOut,
+  type SpeechLogEntry,
+} from '../../lib/speech';
 import { useAppData } from '../../state/useAppData';
 
 export function SpeechSettings() {
@@ -87,7 +93,7 @@ export function SpeechSettings() {
             </button>
           </div>
 
-          <SpeechTroubleshooting />
+          <SpeechTroubleshooting voiceCount={voices.length} />
         </>
       )}
 
@@ -115,28 +121,55 @@ export function SpeechSettings() {
 
 const BAD_EVENTS = new Set<SpeechLogEntry['event']>(['error', 'timeout', 'failed', 'stuck']);
 
-function SpeechTroubleshooting() {
+function SpeechTroubleshooting({ voiceCount }: { voiceCount: number }) {
   const { health, log } = useSpeechStatus();
+  const broken = health === 'stuck' || voiceCount === 0;
   return (
-    <details className="field">
+    <details className="field" open={broken}>
       <summary className="field__label">Troubleshooting: talking stops working</summary>
       <p>
-        Some browsers (especially Chrome on a Mac) occasionally stop speaking until the page is
-        reloaded. The app retries automatically and, if the talking keeps failing, shows children a
-        big “Tap here to fix it” button that reloads the page.
+        Some browsers (especially Chrome on a Mac) occasionally stop speaking. The app retries
+        automatically and, if the talking keeps failing, shows children a big “Tap here to fix it”
+        button that reloads the page. If it's still stuck after that, the children are asked to
+        fetch a grown-up.
       </p>
       <p>
-        Status:{' '}
-        <strong>{health === 'ok' ? '✔ Working' : '✖ Stuck. Reload the page to fix it.'}</strong>
+        Status: <strong>{health === 'ok' ? '✔ Working' : '✖ Stuck'}</strong>
+        {' · '}
+        English voices found: <strong>{voiceCount}</strong>
       </p>
+      {voiceCount === 0 && (
+        <p className="alert alert--error">
+          The browser isn't reporting any voices, so its speech service has stopped. Reloading the
+          page won't fix this. Try the steps below.
+        </p>
+      )}
       <div className="row">
         <button type="button" className="btn btn--ghost" onClick={resetSpeech}>
           Reset speech
         </button>
-        <button type="button" className="btn btn--ghost" onClick={() => window.location.reload()}>
+        <button type="button" className="btn btn--ghost" onClick={reloadForSpeech}>
           Reload page
         </button>
       </div>
+      <p className="field__label">If reloading doesn't help (Mac):</p>
+      <ol className="steps">
+        <li>
+          Quit the browser completely (<kbd>⌘</kbd> + <kbd>Q</kbd>; closing the window isn't enough)
+          and open it again.
+        </li>
+        <li>
+          Still silent? Open <strong>Activity Monitor</strong>, search for{' '}
+          <strong>speechsynthesisd</strong>, select it and choose ✕ → <strong>Force Quit</strong>.
+          macOS restarts it automatically.
+        </li>
+        <li>
+          Check the Mac can speak at all:{' '}
+          <strong>System Settings → Accessibility → Spoken Content</strong>, then play the voice
+          sample. If that's silent too, restart the Mac.
+        </li>
+        <li>As a cross-check, try this site in another browser, such as Safari.</li>
+      </ol>
       {log.length > 0 && (
         <>
           <span className="field__hint">

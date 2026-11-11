@@ -1802,3 +1802,19 @@ input[type='range'] {
   color: var(--danger);
   font-weight: 700;
 }
+
+.steps {
+  margin: 0;
+  padding-left: 22px;
+  line-height: 1.6;
+}
+
+kbd {
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 0.9em;
+}

@@ -58,11 +58,25 @@ const LOG_MAX = 30;
 /** Error codes caused by our own cancel() calls; not real failures. */
 const CANCEL_ERRORS = new Set(['interrupted', 'canceled']);
 
+/** A repeat of the same request within this window, while it's still pending, is ignored. */
+const DUPLICATE_WINDOW_MS = 1000;
+const RELOAD_FLAG_KEY = 'spelling-stars:speech-reloaded';
+
 export type SpeechHealth = 'ok' | 'stuck';
 
 export interface SpeechLogEntry {
   at: number;
-  event: 'speak' | 'start' | 'end' | 'error' | 'timeout' | 'retry' | 'failed' | 'stuck' | 'reset';
+  event:
+    | 'speak'
+    | 'start'
+    | 'end'
+    | 'error'
+    | 'timeout'
+    | 'retry'
+    | 'failed'
+    | 'stuck'
+    | 'reset'
+    | 'duplicate';
   text: string;
   detail?: string;
 }
@@ -74,6 +88,7 @@ let failuresInARow = 0;
 let health: SpeechHealth = 'ok';
 let log: readonly SpeechLogEntry[] = [];
 let visibilityHooked = false;
+let lastRequest: { key: string; at: number } | undefined;
 const listeners = new Set<() => void>();
 
 function emit(): void {
@@ -99,6 +114,31 @@ export function subscribeSpeech(listener: () => void): () => void {
 }
 
 export const getSpeechHealth = (): SpeechHealth => health;
+
+/** Number of English voices the browser currently reports (0 means its speech service is down). */
+export const englishVoiceCount = (): number => getVoices().length;
+
+function sessionFlag(action: 'get' | 'set' | 'clear'): boolean {
+  try {
+    if (action === 'set') sessionStorage.setItem(RELOAD_FLAG_KEY, '1');
+    if (action === 'clear') sessionStorage.removeItem(RELOAD_FLAG_KEY);
+    return sessionStorage.getItem(RELOAD_FLAG_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+/** Reload the page to revive speech, remembering that we tried (see triedReloadForSpeech). */
+export function reloadForSpeech(): void {
+  sessionFlag('set');
+  window.location.reload();
+}
+
+/**
+ * True if the page was already reloaded to fix speech in this tab and speech still hasn't
+ * worked since. A further reload won't help; Chrome or the Mac's speech service needs a restart.
+ */
+export const triedReloadForSpeech = (): boolean => sessionFlag('get');
 export const getSpeechLog = (): readonly SpeechLogEntry[] => log;
 
 function clearTimers(): void {
@@ -132,6 +172,20 @@ export function speak(text: string, opts: SpeakOptions = {}, retry = false): voi
   if (!speechSupported() || !text) return;
   const synth = window.speechSynthesis;
   hookVisibility();
+
+  // Ignore an identical request made moments ago that's still starting or speaking:
+  // cancelling and restarting it is exactly the pattern that upsets Chrome.
+  if (!retry) {
+    const key = `${text}|${opts.voiceURI ?? ''}|${opts.rate ?? ''}`;
+    const now = Date.now();
+    const pending = queued !== undefined || current !== null;
+    if (pending && lastRequest?.key === key && now - lastRequest.at < DUPLICATE_WINDOW_MS) {
+      record('duplicate', text);
+      return;
+    }
+    lastRequest = { key, at: now };
+  }
+
   clearTimers();
 
   const busy = synth.speaking || synth.pending || current !== null;
@@ -180,6 +234,7 @@ export function speak(text: string, opts: SpeakOptions = {}, retry = false): voi
       clearTimeout(timer);
       failuresInARow = 0;
       setHealth('ok');
+      sessionFlag('clear');
       record('start', text, voice?.name ?? 'default voice');
     });
     u.addEventListener('end', () => {
@@ -201,7 +256,8 @@ export function speak(text: string, opts: SpeakOptions = {}, retry = false): voi
     });
 
     current = u;
-    record('speak', text, retry ? 'retry, default voice' : (voice?.name ?? 'default voice'));
+    const voiceLabel = retry ? 'retry, default voice' : (voice?.name ?? 'default voice');
+    record('speak', text, `${voiceLabel}; ${englishVoiceCount()} English voices`);
     synth.speak(u);
 
     timer = setTimeout(() => {
@@ -229,6 +285,7 @@ export function resetSpeech(): void {
   stopSpeaking();
   if (speechSupported()) window.speechSynthesis.resume();
   failuresInARow = 0;
+  lastRequest = undefined;
   setHealth('ok');
   record('reset', '');
 }
