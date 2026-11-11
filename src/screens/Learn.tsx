@@ -1,4 +1,4 @@
-import { BackButton, Mascot, SpeakButton, TopBar } from '../components/common';
+import { BackButton, Mascot, SpeakButton, SpeechStuckBanner, TopBar } from '../components/common';
 import { useSpeech, useStopSpeechOnExit } from '../hooks/useSpeech';
 import type { Child } from '../lib/types';
 
@@ -18,6 +18,7 @@ export function Learn({
     <div className="screen">
       <TopBar left={<BackButton onClick={onBack} />} title="📖 My spellings" />
       <main className="learn">
+        <SpeechStuckBanner />
         <Mascot
           theme={child.theme}
           size="sm"

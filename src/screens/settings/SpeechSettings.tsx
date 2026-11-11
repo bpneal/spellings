@@ -1,4 +1,5 @@
-import { useSpeech, useVoices } from '../../hooks/useSpeech';
+import { useSpeech, useSpeechStatus, useVoices } from '../../hooks/useSpeech';
+import { resetSpeech, type SpeechLogEntry } from '../../lib/speech';
 import { useAppData } from '../../state/useAppData';
 
 export function SpeechSettings() {
@@ -65,6 +66,8 @@ export function SpeechSettings() {
               ▶ Test voice
             </button>
           </div>
+
+          <SpeechTroubleshooting />
         </>
       )}
 
@@ -87,5 +90,50 @@ export function SpeechSettings() {
         </div>
       )}
     </div>
+  );
+}
+
+const BAD_EVENTS = new Set<SpeechLogEntry['event']>(['error', 'timeout', 'failed', 'stuck']);
+
+function SpeechTroubleshooting() {
+  const { health, log } = useSpeechStatus();
+  return (
+    <details className="field">
+      <summary className="field__label">Troubleshooting: talking stops working</summary>
+      <p>
+        Some browsers (especially Chrome on a Mac) occasionally stop speaking until the page is
+        reloaded. The app retries automatically and, if the talking keeps failing, shows children a
+        big “Tap here to fix it” button that reloads the page.
+      </p>
+      <p>
+        Status:{' '}
+        <strong>{health === 'ok' ? '✔ Working' : '✖ Stuck. Reload the page to fix it.'}</strong>
+      </p>
+      <div className="row">
+        <button type="button" className="btn btn--ghost" onClick={resetSpeech}>
+          Reset speech
+        </button>
+        <button type="button" className="btn btn--ghost" onClick={() => window.location.reload()}>
+          Reload page
+        </button>
+      </div>
+      {log.length > 0 && (
+        <>
+          <span className="field__hint">
+            Recent speech activity (newest last). If problems continue, this shows what the browser
+            reported.
+          </span>
+          <ol className="speech-log">
+            {log.map((e, i) => (
+              <li key={i} className={BAD_EVENTS.has(e.event) ? 'speech-log__bad' : undefined}>
+                {new Date(e.at).toLocaleTimeString('en-GB')} {e.event}
+                {e.text && ` "${e.text}"`}
+                {e.detail && ` (${e.detail})`}
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
+    </details>
   );
 }

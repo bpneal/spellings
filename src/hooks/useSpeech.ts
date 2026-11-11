@@ -1,5 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
-import { getVoices, speak, speechSupported, spellOut, stopSpeaking } from '../lib/speech';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import {
+  getSpeechHealth,
+  getSpeechLog,
+  getVoices,
+  speak,
+  speechSupported,
+  spellOut,
+  stopSpeaking,
+  subscribeSpeech,
+} from '../lib/speech';
 
 /** Stop any speech when the calling screen closes (e.g. leaving a game mid-word). */
 export function useStopSpeechOnExit(): void {
@@ -47,4 +56,11 @@ export function useVoices(): SpeechSynthesisVoice[] {
     return () => window.speechSynthesis.removeEventListener('voiceschanged', update);
   }, []);
   return voices;
+}
+
+/** Whether speech is working, and a log of recent speech events. */
+export function useSpeechStatus() {
+  const health = useSyncExternalStore(subscribeSpeech, getSpeechHealth);
+  const log = useSyncExternalStore(subscribeSpeech, getSpeechLog);
+  return { health, log };
 }

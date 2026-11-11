@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { THEMES } from '../lib/themes';
 import type { Theme } from '../lib/types';
-import { useSpeech } from '../hooks/useSpeech';
+import { useSpeech, useSpeechStatus } from '../hooks/useSpeech';
 
 export function Mascot({
   theme,
@@ -143,5 +143,19 @@ export function ThemeSwitch({ theme, onChange }: { theme: Theme; onChange: (t: T
         </button>
       ))}
     </div>
+  );
+}
+
+/**
+ * Shown when the browser's speech engine has stopped responding. A page reload is the only
+ * reliable way to revive it (saved data is kept; a round in progress restarts).
+ */
+export function SpeechStuckBanner() {
+  const { health } = useSpeechStatus();
+  if (health !== 'stuck') return null;
+  return (
+    <button type="button" className="speech-stuck" onClick={() => window.location.reload()}>
+      <span aria-hidden="true">🔇</span> The talking has stopped. Tap here to fix it!
+    </button>
   );
 }

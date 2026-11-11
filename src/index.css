@@ -741,6 +741,24 @@ h3 {
   }
 }
 
+.speech-stuck {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 14px 20px;
+  border: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 20px;
+  font-weight: 600;
+  box-shadow: var(--shadow-press);
+  animation: pop 0.35s ease-out;
+}
+
 /* ───────────────────────── Play ───────────────────────── */
 .progress {
   position: relative;
@@ -1763,4 +1781,24 @@ input[type='range'] {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Speech troubleshooting log */
+.speech-log {
+  max-height: 260px;
+  overflow: auto;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  list-style: none;
+}
+
+.speech-log__bad {
+  color: var(--danger);
+  font-weight: 700;
 }

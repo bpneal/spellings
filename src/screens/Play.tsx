@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { BackButton, Mascot, SpeakButton, TopBar } from '../components/common';
+import { BackButton, Mascot, SpeakButton, SpeechStuckBanner, TopBar } from '../components/common';
 import { LetterTiles } from '../exercises/LetterTiles';
 import { MissingLetters } from '../exercises/MissingLetters';
 import { TypeWord } from '../exercises/TypeWord';
@@ -188,6 +188,8 @@ export function Play({
           </span>
         }
       />
+
+      <SpeechStuckBanner />
 
       <div
         className="progress"
