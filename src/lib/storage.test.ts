@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { STORAGE_KEY, emptyData, loadData, parseAppData, saveData } from './storage';
 
 const withCode = (passcode: unknown) =>
@@ -64,7 +64,13 @@ describe('load/save', () => {
   });
 
   it('starts fresh if stored data is corrupt', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     localStorage.setItem(STORAGE_KEY, '{not json');
     expect(loadData(localStorage)).toEqual(emptyData());
+    expect(warn).toHaveBeenCalledWith(
+      'Could not read saved data; starting fresh.',
+      expect.any(SyntaxError),
+    );
+    warn.mockRestore();
   });
 });
