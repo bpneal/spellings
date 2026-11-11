@@ -1,5 +1,5 @@
 import { BackButton, Mascot, SpeakButton, TopBar } from '../components/common';
-import { useSpeech } from '../hooks/useSpeech';
+import { useSpeech, useStopSpeechOnExit } from '../hooks/useSpeech';
 import type { Child } from '../lib/types';
 
 /** See (and hear) all the words before playing. */
@@ -13,6 +13,7 @@ export function Learn({
   onStart: () => void;
 }) {
   const { spell, supported } = useSpeech();
+  useStopSpeechOnExit();
   return (
     <div className="screen">
       <TopBar left={<BackButton onClick={onBack} />} title="📖 My spellings" />

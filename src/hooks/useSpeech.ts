@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getVoices, speak, speechSupported, spellOut, stopSpeaking } from '../lib/speech';
+
+/** Stop any speech when the calling screen closes (e.g. leaving a game mid-word). */
+export function useStopSpeechOnExit(): void {
+  useEffect(() => stopSpeaking, []);
+}
 import { playCorrect, playFanfare, playTap, playTryAgain } from '../lib/sounds';
 import { useAppData } from '../state/useAppData';
 
@@ -7,8 +12,6 @@ import { useAppData } from '../state/useAppData';
 export function useSpeech() {
   const { data } = useAppData();
   const { voiceURI, rate, soundEffects } = data.settings;
-
-  useEffect(() => stopSpeaking, []);
 
   const say = useCallback((text: string) => speak(text, { voiceURI, rate }), [voiceURI, rate]);
   const sayWord = useCallback(

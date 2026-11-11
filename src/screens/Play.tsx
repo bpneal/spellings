@@ -5,7 +5,7 @@ import { MissingLetters } from '../exercises/MissingLetters';
 import { TypeWord } from '../exercises/TypeWord';
 import type { ExerciseProps } from '../exercises/types';
 import { useIsTouch, useKeyInput } from '../hooks/useKeyInput';
-import { useSpeech } from '../hooks/useSpeech';
+import { useSpeech, useStopSpeechOnExit } from '../hooks/useSpeech';
 import { LEVELS } from '../lib/levels';
 import { CORRECT_FIRST, CORRECT_SECOND, REVEAL, TRY_AGAIN, pick } from '../lib/praise';
 import { STARS_FOR, applyRound, dayKey, starsForOutcomes } from '../lib/progress';
@@ -44,6 +44,7 @@ export function Play({
 }) {
   const { dispatch } = useAppData();
   const { say, spell, sfx } = useSpeech();
+  useStopSpeechOnExit();
   const isTouch = useIsTouch();
   // Default to the on-screen keyboard on touch devices until the child toggles it.
   const [keyboardPref, setKeyboardPref] = useState<boolean>();

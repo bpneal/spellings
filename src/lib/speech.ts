@@ -34,25 +34,86 @@ export interface SpeakOptions {
   rate?: number;
 }
 
-export function speak(text: string, opts: SpeakOptions = {}): void {
+/**
+ * Browser speech engines (Chrome and Safari especially) can get stuck and go silent
+ * until the page is reloaded. To avoid that:
+ * - keep a reference to the current utterance (Chrome can garbage-collect one mid-speech,
+ *   which stalls the queue);
+ * - leave a short gap after cancel() before speaking (Chrome can silently drop an utterance
+ *   queued straight after a cancel);
+ * - resume() if the engine has been left paused (e.g. Safari after switching apps);
+ * - if speech hasn't started within a moment, reset the engine and retry once with the
+ *   default voice (covers a stuck engine or a voice that has stopped working).
+ */
+const CANCEL_GAP_MS = 80;
+export const START_TIMEOUT_MS = 1500;
+
+let current: SpeechSynthesisUtterance | null = null;
+let queued: ReturnType<typeof setTimeout> | undefined;
+let watchdog: ReturnType<typeof setTimeout> | undefined;
+
+function clearTimers(): void {
+  clearTimeout(queued);
+  clearTimeout(watchdog);
+  queued = undefined;
+  watchdog = undefined;
+}
+
+export function speak(text: string, opts: SpeakOptions = {}, retry = false): void {
   if (!speechSupported() || !text) return;
   const synth = window.speechSynthesis;
-  synth.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  const voice = pickVoice(opts.voiceURI);
-  if (voice) {
-    u.voice = voice;
-    u.lang = voice.lang;
-  } else {
-    u.lang = 'en-GB';
-  }
-  u.rate = opts.rate ?? 0.85;
-  u.pitch = 1.05;
-  synth.speak(u);
+  clearTimers();
+
+  const busy = synth.speaking || synth.pending || current !== null;
+  if (busy) synth.cancel();
+  if (synth.paused) synth.resume();
+
+  const start = () => {
+    queued = undefined;
+    const u = new SpeechSynthesisUtterance(text);
+    // On a retry, let the browser use its default voice in case the chosen one is broken.
+    const voice = retry ? undefined : pickVoice(opts.voiceURI);
+    if (voice) {
+      u.voice = voice;
+      u.lang = voice.lang;
+    } else {
+      u.lang = 'en-GB';
+    }
+    u.rate = opts.rate ?? 0.85;
+    u.pitch = 1.05;
+
+    let started = false;
+    const finished = () => {
+      if (current === u) current = null;
+      clearTimeout(watchdog);
+    };
+    u.addEventListener('start', () => {
+      started = true;
+      clearTimeout(watchdog);
+    });
+    u.addEventListener('end', finished);
+    u.addEventListener('error', finished);
+
+    current = u;
+    synth.speak(u);
+
+    watchdog = setTimeout(() => {
+      if (started || current !== u) return;
+      current = null;
+      synth.cancel();
+      if (!retry) speak(text, opts, true);
+    }, START_TIMEOUT_MS);
+  };
+
+  if (busy) queued = setTimeout(start, CANCEL_GAP_MS);
+  else start();
 }
 
 export function stopSpeaking(): void {
-  if (speechSupported()) window.speechSynthesis.cancel();
+  if (!speechSupported()) return;
+  clearTimers();
+  current = null;
+  window.speechSynthesis.cancel();
 }
 
 /** "cat" → "cat. c, a, t. cat." — used to model the spelling after a reveal. */
