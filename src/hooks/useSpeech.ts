@@ -28,7 +28,7 @@ export function useSpeech() {
     [voiceURI, rate],
   );
   const spell = useCallback(
-    (word: string) => speak(spellOut(word), { voiceURI, rate: Math.max(0.5, rate - 0.15) }),
+    (word: string) => speak(spellOut(word, rate), { voiceURI, rate: Math.max(0.5, rate - 0.15) }),
     [voiceURI, rate],
   );
 

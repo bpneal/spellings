@@ -224,7 +224,15 @@ describe('recovering from a stuck engine', () => {
 });
 
 describe('spellOut', () => {
-  it('says the word, its letters, then the word again', () => {
-    expect(spellOut("can't")).toBe("can't. c, a, n, t. can't.");
+  it('says the word, its letters, then the word again (skipping punctuation)', () => {
+    expect(spellOut("can't")).toBe("can't. c. a. n. t. can't.");
+  });
+
+  it('leaves longer gaps between letters at slower speeds', () => {
+    expect(spellOut('cat', 1.2)).toBe('cat. c, a, t. cat.');
+    expect(spellOut('cat', 1)).toBe('cat. c, a, t. cat.');
+    expect(spellOut('cat', 0.85)).toBe('cat. c. a. t. cat.');
+    expect(spellOut('cat', 0.7)).toBe('cat. c. a. t. cat.');
+    expect(spellOut('cat', 0.6)).toBe('cat. c… a… t. cat.');
   });
 });

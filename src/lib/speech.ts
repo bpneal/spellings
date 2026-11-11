@@ -233,8 +233,22 @@ export function resetSpeech(): void {
   record('reset', '');
 }
 
-/** "cat" → "cat. c, a, t. cat." — used to model the spelling after a reveal. */
-export function spellOut(word: string): string {
-  const letters = [...word].filter((ch) => /\p{L}/u.test(ch)).join(', ');
+/**
+ * The pause between spelled-out letters for a speaking speed. Punctuation is used because
+ * every voice pauses at it, including voices that ignore the speed setting (common with the
+ * built-in Mac voices in Chrome), so slower settings always give slower letters.
+ */
+export function letterPause(rate: number): string {
+  if (rate >= 1) return ', ';
+  if (rate >= 0.7) return '. ';
+  return '… ';
+}
+
+/**
+ * "cat" → "cat. c. a. t. cat." — used to model the spelling. The gap between letters
+ * follows the speaking speed (see letterPause).
+ */
+export function spellOut(word: string, rate = 0.85): string {
+  const letters = [...word].filter((ch) => /\p{L}/u.test(ch)).join(letterPause(rate));
   return `${word}. ${letters}. ${word}.`;
 }

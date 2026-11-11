@@ -1,5 +1,6 @@
+import { useEffect, useRef } from 'react';
 import { useSpeech, useSpeechStatus, useVoices } from '../../hooks/useSpeech';
-import { resetSpeech, type SpeechLogEntry } from '../../lib/speech';
+import { resetSpeech, speak, spellOut, type SpeechLogEntry } from '../../lib/speech';
 import { useAppData } from '../../state/useAppData';
 
 export function SpeechSettings() {
@@ -7,6 +8,18 @@ export function SpeechSettings() {
   const { say, sfx, supported } = useSpeech();
   const voices = useVoices();
   const { voiceURI, rate, soundEffects } = data.settings;
+
+  // Speak a short sample after the voice or speed changes, so it's obvious whether the
+  // chosen voice responds to the speed setting. Debounced so dragging the slider doesn't chatter.
+  const previewTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(previewTimer.current), []);
+  const preview = (next: { voiceURI?: string; rate: number }) => {
+    clearTimeout(previewTimer.current);
+    previewTimer.current = setTimeout(
+      () => speak(`This is how fast I talk. ${spellOut('cat', next.rate)}`, next),
+      400,
+    );
+  };
 
   return (
     <div className="form">
@@ -23,12 +36,11 @@ export function SpeechSettings() {
             <select
               className="input"
               value={voiceURI ?? ''}
-              onChange={(e) =>
-                dispatch({
-                  type: 'updateSettings',
-                  changes: { voiceURI: e.target.value || undefined },
-                })
-              }
+              onChange={(e) => {
+                const next = e.target.value || undefined;
+                dispatch({ type: 'updateSettings', changes: { voiceURI: next } });
+                preview({ voiceURI: next, rate });
+              }}
             >
               <option value="">Automatic (British English if available)</option>
               {voices.map((v) => (
@@ -51,10 +63,18 @@ export function SpeechSettings() {
               max={1.5}
               step={0.05}
               value={rate}
-              onChange={(e) =>
-                dispatch({ type: 'updateSettings', changes: { rate: Number(e.target.value) } })
-              }
+              onChange={(e) => {
+                const next = Number(e.target.value);
+                dispatch({ type: 'updateSettings', changes: { rate: next } });
+                preview({ voiceURI, rate: next });
+              }}
             />
+            <span className="field__hint">
+              A sample plays when you change the speed. Slower settings always leave longer gaps
+              between spelled-out letters. Some voices ignore the speed of the words themselves.
+              This is a browser limitation, common with the built-in Mac voices in Chrome. Chrome's
+              “Google” voices respect the speed but are online, and can be less reliable.
+            </span>
           </label>
 
           <div className="row">
