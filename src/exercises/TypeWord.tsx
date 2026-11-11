@@ -30,7 +30,7 @@ export function TypeWord({
       const t = setTimeout(() => sayWord(word), 350);
       return () => clearTimeout(t);
     }
-    sayWord(word);
+    // Look, Cover, Write: no automatic speech; children tap 🔊 if they want to hear it.
     const t = setTimeout(() => setPhase('write'), lookTimeMs(word));
     return () => clearTimeout(t);
   }, [mode, word, sayWord]);
@@ -73,6 +73,7 @@ export function TypeWord({
         <p className="look-hint">Look carefully at the word…</p>
         <div className="target-word target-word--look">
           <span className="target-word__text">{word}</span>
+          <SpeakButton text={word} big />
         </div>
         {lastTry}
         <div className="countdown" aria-hidden="true">
@@ -96,8 +97,12 @@ export function TypeWord({
           <SpeakButton text={word} big label="Hear the word again" />
         </div>
       ) : (
-        <div className="covered" aria-hidden="true">
-          🙈 The word is hiding!
+        // The word is covered, but children can still listen to it.
+        <div className="target-word">
+          <div className="covered" aria-hidden="true">
+            🙈 The word is hiding!
+          </div>
+          <SpeakButton text={word} big label="Hear the word" />
         </div>
       )}
 

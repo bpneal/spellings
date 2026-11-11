@@ -100,7 +100,7 @@ export function LetterTiles({ word, attempt, lastAnswer, onSubmit }: ExercisePro
     <div className="exercise">
       <div className="target-word">
         <span className="target-word__text">{word}</span>
-        <SpeakButton text={word} />
+        <SpeakButton text={word} big />
       </div>
 
       <div className="slots" aria-label="Your word">

@@ -109,6 +109,41 @@ describe('Spelling Stars', () => {
     expect(loadData().progress.k1?.words.said?.[4]).toEqual({ seen: 1, firstTry: 0, correct: 1 });
   });
 
+  it('lets children hear the word in Look, Cover, Write, even once it is covered', async () => {
+    const speakSpy = vi.fn<() => void>();
+    vi.stubGlobal('speechSynthesis', {
+      speaking: false,
+      pending: false,
+      paused: false,
+      getVoices: () => [],
+      speak: speakSpy,
+      cancel: vi.fn<() => void>(),
+      resume: vi.fn<() => void>(),
+    });
+    vi.stubGlobal(
+      'SpeechSynthesisUtterance',
+      class {
+        addEventListener() {}
+      },
+    );
+    try {
+      const user = userEvent.setup();
+      renderApp(oneChild(['said']));
+      await user.click(screen.getByRole('button', { name: /Look, Cover, Write/ }));
+      expect(screen.getByRole('button', { name: 'Hear the word' })).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: /I'm ready/ }));
+      expect(screen.getByText(/The word is hiding/)).toBeInTheDocument();
+      expect(screen.queryByText('said')).not.toBeInTheDocument();
+      // Nothing is spoken until the child asks.
+      expect(speakSpy).not.toHaveBeenCalled();
+      await user.click(screen.getByRole('button', { name: 'Hear the word' }));
+      expect(speakSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   describe('settings passcode', () => {
     beforeEach(resetPasscodeAttempts);
 
